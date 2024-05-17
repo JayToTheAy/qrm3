@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Changed
 - Updated Pycord to 2.6.0.
+- `run.sh` to respect the `VIRTUAL_ENV` environment variable.
 
 
 ## [2.9.2] - 2023-12-15
