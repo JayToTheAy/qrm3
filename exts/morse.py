@@ -74,12 +74,12 @@ class MorseCog(commands.Cog):
                 embed.title = "Error in calculation of CW weight"
                 embed.description = f"Unknown character `{char}` in message"
                 embed.colour = cmn.colours.bad
-                await ctx.send(embed=embed)
+                await ctx.send_response(embed=embed)
                 return
         embed.title = f"CW Weight of {msg}"
         embed.description = f"The CW weight is **{weight}**"
         embed.colour = cmn.colours.good
-        await ctx.send(embed=embed)
+        await ctx.send_response(embed=embed)
 
 
 def setup(bot: commands.Bot):
