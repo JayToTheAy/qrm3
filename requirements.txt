@@ -1,4 +1,4 @@
-py-cord[speed]==2.6.0
+py-cord
 ctyparser~=2.0
 gridtools~=1.0
 callsignlookuptools[async]~=1.1
