@@ -10,6 +10,8 @@ SPDX-License-Identifier: LiLiQ-Rplus-1.1
 import json
 
 import discord.ext.commands as commands
+from discord import commands as std_commands
+from discord import IntegrationType
 
 import common as cmn
 
@@ -20,10 +22,10 @@ class MorseCog(commands.Cog):
         with open(cmn.paths.resources / "morse.1.json") as file:
             d = json.load(file)
             self.morse: dict[str, str] = d["morse"]
-            self.ascii: dict[str, int] = d["ascii"]
+            self.ascii: dict[str, str] = d["ascii"]
 
-    @commands.command(name="morse", aliases=["cw"], category=cmn.Cats.CODES)
-    async def _morse(self, ctx: commands.Context, *, msg: str):
+    @commands.slash_command(name="morse", category=cmn.Cats.CODES)
+    async def _morse(self, ctx: std_commands.context.ApplicationContext, msg: str, integration_types={IntegrationType.guild_install, IntegrationType.user_install}):
         """Converts ASCII to international morse code."""
         result = ""
         for char in msg.upper():
@@ -32,36 +34,36 @@ class MorseCog(commands.Cog):
             except KeyError:
                 result += "<?>"
             result += " "
-        embed = cmn.embed_factory(ctx)
+        embed = cmn.embed_factory_slash(ctx)
         embed.title = f"Morse Code for {msg}"
         embed.description = "**" + result + "**"
         embed.colour = cmn.colours.good
-        await ctx.send(embed=embed)
+        await ctx.send_response(embed=embed)
 
-    @commands.command(name="unmorse", aliases=["demorse", "uncw", "decw"], category=cmn.Cats.CODES)
-    async def _unmorse(self, ctx: commands.Context, *, msg: str):
+    @commands.slash_command(name="unmorse", category=cmn.Cats.CODES, integration_types={IntegrationType.guild_install, IntegrationType.user_install})
+    async def _unmorse(self, ctx: std_commands.context.ApplicationContext, msg: str):
         """Converts international morse code to ASCII."""
         result = ""
         msg0 = msg
-        msg = msg.split("/")
-        msg = [m.split() for m in msg]
-        for word in msg:
+        list_msg: list[str] = msg.split("/")
+        brokenup_msg: list[list[str]] = [m.split() for m in list_msg]
+        for word in brokenup_msg:
             for char in word:
                 try:
                     result += self.ascii[char]
                 except KeyError:
                     result += "<?>"
             result += " "
-        embed = cmn.embed_factory(ctx)
+        embed = cmn.embed_factory_slash(ctx)
         embed.title = f"ASCII for {msg0}"
         embed.description = result
         embed.colour = cmn.colours.good
-        await ctx.send(embed=embed)
+        await ctx.send_response(embed=embed)
 
-    @commands.command(name="cwweight", aliases=["weight", "cww"], category=cmn.Cats.CODES)
-    async def _weight(self, ctx: commands.Context, *, msg: str):
+    @commands.slash_command(name="cwweight", category=cmn.Cats.CODES, integration_types={IntegrationType.guild_install, IntegrationType.user_install})
+    async def _weight(self, ctx: std_commands.context.ApplicationContext, msg: str):
         """Calculates the CW weight of a callsign or message."""
-        embed = cmn.embed_factory(ctx)
+        embed = cmn.embed_factory_slash(ctx)
         msg = msg.upper()
         weight = 0
         for char in msg:

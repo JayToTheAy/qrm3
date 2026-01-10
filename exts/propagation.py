@@ -74,7 +74,6 @@ class PropagationCog(commands.Cog):
         embed.colour = cmn.colours.good
         date_params = f"&date=1&utc={datetime.now(timezone.utc):%Y-%m-%d+%H:%M:%S}"
         embed.set_image(url=self.gl_baseurl + date_params)
-        print(self.gl_baseurl + date_params) # debug print
         await ctx.send_response(embed=embed)
 
     @commands.slash_command(name="solarweather", category=cmn.Cats.WEATHER, integration_types={IntegrationType.guild_install, IntegrationType.user_install})
