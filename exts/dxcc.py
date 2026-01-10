@@ -32,7 +32,7 @@ class DXCCCog(commands.Cog):
             self.cty = BigCty()
 
     @commands.slash_command(name="dxcc", category=cmn.Cats.LOOKUP, integration_types={IntegrationType.guild_install, IntegrationType.user_install})
-    async def _dxcc_lookup(self, ctx: std_commands.context.ApplicationContext, query: str, private: bool):
+    async def _dxcc_lookup(self, ctx: std_commands.context.ApplicationContext, query: str, private: bool = False):
         """Gets DXCC info about a callsign prefix."""
         query = query.upper()
         full_query = query
