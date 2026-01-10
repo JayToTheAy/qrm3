@@ -42,10 +42,6 @@ class QRZCog(commands.Cog):
         except AttributeError:
             pass
 
-    @commands.slash_command(name="test", category=cmn.Cats.LOOKUP) # TODO: remove
-    async def _test(self, ctx):
-        await ctx.send_response("Wowza.")
-
     @commands.slash_command(name="call", category=cmn.Cats.LOOKUP, integration_types={IntegrationType.guild_install, IntegrationType.user_install})
     async def _qrz_lookup_slash(self, ctx: std_commands.context.ApplicationContext, callsign: str, private: bool = False):
         if self.qrz is None:
