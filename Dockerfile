@@ -1,30 +1,28 @@
-FROM ghcr.io/void-linux/void-glibc-full
+FROM python:3.13.12-trixie
 
 COPY . /app
 WORKDIR /app
 
-ARG REPOSITORY=https://repo-fastly.voidlinux.org/current
-ARG PKGS="cairo libjpeg-turbo libgcc"
+ARG PKGS="libcairo2 libjpeg-turbo"
 ARG UID 1000
 ARG GID 1000
 
 RUN \
-    echo "**** update system ****" && \
-    xbps-install -Suy xbps -R ${REPOSITORY} && \
-    xbps-install -uy -R ${REPOSITORY} && \
-    echo "**** install system packages ****" && \
-    xbps-install -y -R ${REPOSITORY} ${PKGS} python3 && \
-    echo "**** install pip packages ****" && \
-    python3 -m venv botenv && \
+    echo "**** update system and install packages ****" && \
+    apt-get update && \
+    apt-get install -y ${PKGS} && \
+    apt-get dist-clean && \
+    echo "**** install python packages ****" && \
+    python -m venv botenv && \
     botenv/bin/pip install -U pip setuptools wheel && \
     botenv/bin/pip install -r requirements.txt && \
     echo "**** clean up ****" && \
     rm -rf \
         /root/.cache \
         /tmp/* \
-        /var/cache/xbps/*
+        /var/cache/*
 
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED 1
 
 USER $UID:$GID
 
