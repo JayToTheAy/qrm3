@@ -70,8 +70,8 @@ This is the easiest method to run the bot with modifications.
 5. Run `docker-compose`:
 
     ```none
-    $ docker-compose build --pull
-    $ docker-compose up -d
+    $ docker compose build --pull
+    $ docker compose up -d
     ```
 
     *Run without "-d" to test the bot (run in foreground).*
