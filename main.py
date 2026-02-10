@@ -46,7 +46,12 @@ debug_mode = (
 # --- Bot setup ---
 
 # Loop/aiohttp stuff
-loop = asyncio.get_event_loop()
+try:
+    loop = asyncio.get_event_loop()
+except RuntimeError:
+    # restore <=3.13 get_event_loop() behaviour
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 connector = loop.run_until_complete(conn.new_connector())
 
 # Defining the intents
