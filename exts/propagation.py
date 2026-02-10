@@ -118,7 +118,7 @@ class PropagationCog(commands.Cog):
         embed = cmn.embed_factory_slash(ctx)
         embed.title = "D Region Absorption Predictions (D-RAP) Map"
         embed.colour = cmn.colours.good
-        embed.description = "Image from [swpc.noaa.gov] \
+        embed.description = "Image from [swpc.noaa.gov]\
             (https://www.swpc.noaa.gov/products/d-region-absorption-predictions-d-rap)"
         embed.set_image(url=self.noaa_drap_url)
         await ctx.send_response(embed=embed)
