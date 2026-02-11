@@ -191,6 +191,7 @@ def embed_factory(ctx: commands.Context) -> discord.Embed:
     return embed
 
 
+# TODO: combine this with above by just making ctx a union type idk
 def embed_factory_slash(ctx: std_commands.context.ApplicationContext) -> discord.Embed:
     embed = discord.Embed(timestamp=datetime.now(timezone.utc), colour=colours.neutral)
     if ctx.author:
@@ -209,6 +210,24 @@ def error_embed_factory(
     else:
         fmtd_ex = traceback.format_exception_only(exception.__class__, exception)
     embed = embed_factory(ctx)
+    embed.title = "⚠️ Error"
+    embed.description = "```\n" + "\n".join(fmtd_ex) + "```"
+    embed.colour = colours.bad
+    return embed
+
+
+# TODO: combine this with above by just making ctx a union type idk
+def error_embed_factory_slash(
+    ctx: std_commands.context.ApplicationContext, exception: Exception, debug_mode: bool
+) -> discord.Embed:
+    """Creates an Error embed."""
+    if debug_mode:
+        fmtd_ex = traceback.format_exception(
+            exception.__class__, exception, exception.__traceback__
+        )
+    else:
+        fmtd_ex = traceback.format_exception_only(exception.__class__, exception)
+    embed = embed_factory_slash(ctx)
     embed.title = "⚠️ Error"
     embed.description = "```\n" + "\n".join(fmtd_ex) + "```"
     embed.colour = colours.bad

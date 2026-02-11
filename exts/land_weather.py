@@ -41,7 +41,7 @@ class WeatherCog(commands.Cog):
             str,
             "City name, landmark, airport code, domain, IP, \
 area code, or GPS coords. See https://wttr.in/:help",
-        ),  # noqa: F722 # type: ignore
+        ),  # type: ignore
         scale: str = "",
     ):
         """Gets local weather forecast for the next three days from wttr.in."""
@@ -74,7 +74,7 @@ area code, or GPS coords. See https://wttr.in/:help",
             str,
             "City name, landmark, airport code, domain, IP, \
 area code, or GPS coords. See https://wttr.in/:help",
-        ),  # noqa: F722 # type: ignore
+        ),  # type: ignore
         scale: str = "",
     ):
         """Gets current local weather conditions from wttr.in."""
@@ -107,12 +107,12 @@ area code, or GPS coords. See https://wttr.in/:help",
         ctx: std_commands.context.ApplicationContext,
         airport: Option(
             str,
-            "Four character ICAO code identifying an airport.",  # noqa: F722
+            "Four character ICAO code identifying an airport.",
             required=True,
             min_length=4,
             max_length=4,
         ),  # type: ignore
-        hours: Option(int, "Hours of historical data to pull", default=0, max_value=500),  # noqa: F722 # type: ignore
+        hours: Option(int, "Hours of historical data to pull", default=0, max_value=500),  # type: ignore
     ):
         """Gets current raw METAR (Meteorological Terminal Aviation Routine Weather Report) for an airport."""
 
@@ -153,7 +153,7 @@ area code, or GPS coords. See https://wttr.in/:help",
         ctx: std_commands.context.ApplicationContext,
         airport: Option(
             str,
-            "Four character ICAO code identifying an airport.",  # noqa: F722
+            "Four character ICAO code identifying an airport.",
             required=True,
             min_length=4,
             max_length=4,
