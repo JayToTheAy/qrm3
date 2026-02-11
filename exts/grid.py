@@ -16,14 +16,17 @@ import common as cmn
 
 
 class GridCog(commands.Cog):
-    grid_cat = SlashCommandGroup("grid", "Grid Calculation Operations")
+    grid_cat = SlashCommandGroup(
+        "grid",
+        "Grid Calculation Operations",
+        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    )
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @grid_cat.command(
         name="lat2grid",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _grid_sq_lookup(
         self, ctx: std_commands.context.ApplicationContext, lat: float, lon: float
@@ -46,7 +49,6 @@ class GridCog(commands.Cog):
 
     @grid_cat.command(
         name="latlong",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _location_lookup(
         self, ctx: std_commands.context.ApplicationContext, grid: str
@@ -64,8 +66,7 @@ class GridCog(commands.Cog):
         await ctx.send_response(embed=embed)
 
     @grid_cat.command(
-        name="griddistance",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+        name="distance",
     )
     async def _dist_lookup(
         self, ctx: std_commands.context.ApplicationContext, grid1: str, grid2: str

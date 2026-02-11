@@ -10,7 +10,7 @@ import json
 
 import discord.ext.commands as commands
 from discord import commands as std_commands
-from discord import IntegrationType
+from discord import IntegrationType, SlashCommandGroup
 
 import common as cmn
 
@@ -24,10 +24,15 @@ class MorseCog(commands.Cog):
             self.morse: dict[str, str] = d["morse"]
             self.ascii: dict[str, str] = d["ascii"]
 
-    @commands.slash_command(
-        name="morse",
-        category=cmn.Cats.CODES,
+    morse_cat = SlashCommandGroup(
+        "cw",
+        "Morse code commands",
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    )
+
+    @morse_cat.command(
+        name="morsify",
+        category=cmn.Cats.CODES,
     )
     async def _morse(self, ctx: std_commands.context.ApplicationContext, msg: str):
         """Converts ASCII to international morse code."""
@@ -44,10 +49,9 @@ class MorseCog(commands.Cog):
         embed.colour = cmn.colours.good
         await ctx.send_response(embed=embed)
 
-    @commands.slash_command(
-        name="unmorse",
+    @morse_cat.command(
+        name="unmorsify",
         category=cmn.Cats.CODES,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _unmorse(self, ctx: std_commands.context.ApplicationContext, msg: str):
         """Converts international morse code to ASCII."""
@@ -68,10 +72,9 @@ class MorseCog(commands.Cog):
         embed.colour = cmn.colours.good
         await ctx.send_response(embed=embed)
 
-    @commands.slash_command(
-        name="cwweight",
+    @morse_cat.command(
+        name="weight",
         category=cmn.Cats.CODES,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _weight(self, ctx: std_commands.context.ApplicationContext, msg: str):
         """Calculates the CW weight of a callsign or message."""

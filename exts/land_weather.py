@@ -28,13 +28,12 @@ class WeatherCog(commands.Cog):
         self.session = aiohttp.ClientSession(connector=bot.qrm.connector)
 
     weather_cat = discord.SlashCommandGroup(
-        "weather", "Gets weather conditions from wttr.in."
-    )
-
-    @weather_cat.command(
-        name="forecast",
+        "weather",
+        "Gets weather conditions from wttr.in.",
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
+
+    @weather_cat.command(name="forecast")
     async def _weather_conditions_forecast(
         self,
         ctx: std_commands.context.ApplicationContext,
@@ -67,7 +66,6 @@ area code, or GPS coords. See https://wttr.in/:help",
 
     @weather_cat.command(
         name="now",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _weather_conditions_now(
         self,

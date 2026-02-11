@@ -99,11 +99,6 @@ async def _restart_bot(ctx: commands.Context):
     await bot.close()
 
 
-@bot.slash_command(name="ping", category=cmn.BoltCats.ADMIN)
-async def ping(ctx):  # a slash command will be created with the name "ping"
-    await ctx.send_response(f"Pong! Latency is {bot.latency}")
-
-
 @bot.command(name="shutdown", aliases=["shut"], category=cmn.BoltCats.ADMIN)
 @commands.check(cmn.check_if_owner)
 async def _shutdown_bot(ctx: commands.Context):

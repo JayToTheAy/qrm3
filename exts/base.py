@@ -14,6 +14,7 @@ import pathlib
 
 import discord
 import discord.ext.commands as commands
+from discord import commands as std_commands
 from discord.ext.commands import Command, CommandError
 
 import info
@@ -228,23 +229,34 @@ class BaseCog(commands.Cog):
             embed.set_thumbnail(url=str(self.bot.user.avatar.url))
         await ctx.send(embed=embed)
 
-    @commands.command(name="ping", aliases=["beep"], category=cmn.BoltCats.INFO)
-    async def _ping(self, ctx: commands.Context):
+    @commands.slash_command(
+        name="ping",
+        integration_types={
+            discord.IntegrationType.guild_install,
+            discord.IntegrationType.user_install,
+        },
+    )
+    async def _ping(self, ctx: std_commands.context.ApplicationContext):
         """Shows the current latency to the discord endpoint."""
-        embed = cmn.embed_factory(ctx)
+        embed = cmn.embed_factory_slash(ctx)
         content = ""
-        if ctx.invoked_with == "beep":
-            embed.title = "**Boop!**"
-        else:
-            content = ctx.message.author.mention if random.random() < 0.05 else ""
-            embed.title = "🏓 **Pong!**"
+        content = ctx.message.author.mention if random.random() < 0.05 else ""
+        embed.title = "🏓 **Pong!**"
         embed.description = f"Current ping is {self.bot.latency*1000:.1f} ms"
-        await ctx.send(content, embed=embed)
+        await ctx.send_response(content, embed=embed)
 
-    @commands.command(name="changelog", aliases=["clog"], category=cmn.BoltCats.INFO)
-    async def _changelog(self, ctx: commands.Context, version: str = "latest"):
+    @commands.slash_command(
+        name="changelog",
+        integration_types={
+            discord.IntegrationType.guild_install,
+            discord.IntegrationType.user_install,
+        },
+    )
+    async def _changelog(
+        self, ctx: std_commands.context.ApplicationContext, version: str = "latest"
+    ):
         """Shows what has changed in a bot version. Defaults to the latest version."""
-        embed = cmn.embed_factory(ctx)
+        embed = cmn.embed_factory_slash(ctx)
         embed.title = "qrm Changelog"
         embed.description = (
             "For a full listing, visit [GitHub](https://"
@@ -268,7 +280,7 @@ class BaseCog(commands.Cog):
             embed.description += "\n\n**Valid versions:** latest, "
             embed.description += ", ".join(vers)
             embed.colour = cmn.colours.bad
-            await ctx.send(embed=embed)
+            await ctx.send_response(embed=embed)
             return
 
         if "date" in log:
@@ -277,41 +289,37 @@ class BaseCog(commands.Cog):
             embed.description += f"\n\n**v{version}**"
         embed = await format_changelog(log, embed)
 
-        await ctx.send(embed=embed)
+        await ctx.send_response(embed=embed)
 
-    @commands.command(name="issue", category=cmn.BoltCats.INFO)
-    async def _issue(self, ctx: commands.Context):
+    @commands.slash_command(
+        name="issue",
+        integration_types={
+            discord.IntegrationType.guild_install,
+            discord.IntegrationType.user_install,
+        },
+    )
+    async def _issue(self, ctx: std_commands.context.ApplicationContext):
         """Shows how to create a bug report or feature request about the bot."""
-        embed = cmn.embed_factory(ctx)
+        embed = cmn.embed_factory_slash(ctx)
         embed.title = "Found a bug? Have a feature request?"
         embed.description = inspect.cleandoc(info.issue_tracker)
-        await ctx.send(embed=embed)
+        await ctx.send_response(embed=embed)
 
-    # Comment out donations for now since we aren't taking them
-    # @commands.command(name="donate", aliases=["tip"], category=cmn.BoltCats.INFO)
-    # async def _donate(self, ctx: commands.Context):
-    #     """Shows ways to help support development of the bot via donations."""
-    #     embed = cmn.embed_factory(ctx)
-    #     embed.title = "Help Support qrm's Development!"
-    #     embed.description = (
-    #         "Donations are always appreciated, and help with server and infrastructure costs."
-    #         "\nThank you for your support!"
-    #     )
-    #     if info.donating:
-    #         embed.add_field(name="Links", value=info.donating, inline=False)
-    #     await ctx.send(embed=embed)
-
-    @commands.command(
-        name="invite", enabled=opt.enable_invite_cmd, category=cmn.BoltCats.INFO
+    @commands.slash_command(
+        name="invite",
+        integration_types={
+            discord.IntegrationType.guild_install,
+            discord.IntegrationType.user_install,
+        },
     )
-    async def _invite(self, ctx: commands.Context):
+    async def _invite(self, ctx: std_commands.context.ApplicationContext):
         """Generates a link to invite the bot to a server."""
         if not (await self.bot.application_info()).bot_public:
             raise commands.DisabledCommand
-        embed = cmn.embed_factory(ctx)
+        embed = cmn.embed_factory_slash(ctx)
         embed.title = "Invite qrm to Your Server!"
         embed.description = self.bot_invite
-        await ctx.send(embed=embed)
+        await ctx.send_response(embed=embed)
 
     @commands.command(name="echo", aliases=["e"], category=cmn.BoltCats.ADMIN)
     @commands.check(cmn.check_if_owner)
@@ -327,7 +335,7 @@ class BaseCog(commands.Cog):
         Does not work with the ID of the bot user."""
         if isinstance(channel, discord.ClientUser):
             raise commands.BadArgument("Can't send to the bot user!")
-        await channel.send(msg)
+        await ctx.send(msg)
 
 
 def parse_changelog():

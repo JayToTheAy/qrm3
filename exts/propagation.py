@@ -29,7 +29,11 @@ class PropagationCog(commands.Cog):
         "https://services.swpc.noaa.gov/images/animations/d-rap/global/latest.png"
     )
 
-    prop_cat = discord.SlashCommandGroup("prop", "Propagation")
+    prop_cat = discord.SlashCommandGroup(
+        "prop",
+        "Propagation",
+        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    )
 
     def __init__(self, bot):
         self.bot = bot
@@ -37,7 +41,6 @@ class PropagationCog(commands.Cog):
 
     @prop_cat.command(
         name="muf",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def mufmap(self, ctx: std_commands.context.ApplicationContext):
         """Shows a world map of the Maximum Usable Frequency (MUF)."""
@@ -57,7 +60,6 @@ class PropagationCog(commands.Cog):
 
     @prop_cat.command(
         name="fof2",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def fof2map(self, ctx: std_commands.context.ApplicationContext):
         """Shows a world map of the Critical Frequency (foF2)."""
@@ -77,7 +79,6 @@ class PropagationCog(commands.Cog):
 
     @prop_cat.command(
         name="grayline",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def grayline(self, ctx: std_commands.context.ApplicationContext):
         """Gets a map of the current greyline, where HF propagation is the best."""
@@ -90,7 +91,6 @@ class PropagationCog(commands.Cog):
 
     @prop_cat.command(
         name="solarweather",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def solarweather(self, ctx: std_commands.context.ApplicationContext):
         """Gets a solar weather report."""
@@ -108,7 +108,6 @@ class PropagationCog(commands.Cog):
 
     @prop_cat.command(
         name="drap",
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def drapmap(self, ctx: std_commands.context.ApplicationContext):
         """Gets the current D-RAP map for radio blackouts"""

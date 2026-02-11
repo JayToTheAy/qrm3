@@ -47,6 +47,7 @@ class StudyCog(commands.Cog):
 
         return [" "]
 
+    # TODO: OptionChoice objects key:value pair. Add decodes.
     @commands.slash_command(
         name="hamstudy",
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
@@ -54,7 +55,7 @@ class StudyCog(commands.Cog):
     async def _random_question(
         self,
         ctx: std_commands.context.ApplicationContext,
-        country: Option(str, choices=study.pool_names.keys()) = "",  # type: ignore # OptionChoice objects key:value pair. Add decodes.
+        country: Option(str, choices=study.pool_names.keys()) = "",  # type: ignore
         level: Option(str, autocomplete=basic_autocomplete(get_level_options)) = "",  # type: ignore
         element: str = "",
     ):
