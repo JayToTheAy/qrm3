@@ -11,7 +11,7 @@ import random
 
 import discord.ext.commands as commands
 from discord import commands as std_commands
-from discord import IntegrationType
+from discord import IntegrationType, SlashCommandGroup
 
 import common as cmn
 
@@ -27,7 +27,13 @@ class FunCog(commands.Cog):
         with open(cmn.paths.resources / "words.1.txt") as words_file:
             self.words = words_file.read().lower().splitlines()
 
-    @commands.slash_command(
+    fun_cat = SlashCommandGroup(
+        "fun",
+        "Novelty fun commands.",
+        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    )
+
+    @std_commands.slash_command(
         name="xkcd",
         category=cmn.Cats.FUN,
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
@@ -36,28 +42,25 @@ class FunCog(commands.Cog):
         """Looks up an xkcd comic by number."""
         await ctx.send_response("http://xkcd.com/" + str(number))
 
-    @commands.slash_command(
+    @fun_cat.command(
         name="tar",
         category=cmn.Cats.FUN,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _tar(self, ctx: std_commands.context.ApplicationContext):
         """Returns xkcd: tar."""
         await ctx.send_response("http://xkcd.com/1168")
 
-    @commands.slash_command(
+    @fun_cat.command(
         name="standards",
         category=cmn.Cats.FUN,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _standards(self, ctx: std_commands.context.ApplicationContext):
         """Returns xkcd: Standards."""
         await ctx.send_response("http://xkcd.com/927")
 
-    @commands.slash_command(
+    @fun_cat.command(
         name="worksplit",
         category=cmn.Cats.FUN,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _worksplit(self, ctx: std_commands.context.ApplicationContext):
         """Posts "Work split you lids"."""
@@ -66,10 +69,9 @@ class FunCog(commands.Cog):
         embed.set_image(url=opt.resources_url + self.imgs["worksplit"])
         await ctx.send_response(embed=embed)
 
-    @commands.slash_command(
+    @fun_cat.command(
         name="funetics",
         category=cmn.Cats.FUN,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _funetics_lookup(
         self, ctx: std_commands.context.ApplicationContext, *, msg: str
