@@ -6,9 +6,10 @@ Copyright (C) 2021-2023 classabbyamp, 0x5c
 SPDX-License-Identifier: LiLiQ-Rplus-1.1
 """
 
+from typing import Union
+
 import discord.ext.commands as commands
-from discord import commands as std_commands
-from discord import IntegrationType
+from discord import ApplicationContext, Embed, IntegrationType
 
 import common as cmn
 from resources import callsign_info
@@ -20,17 +21,13 @@ class PrefixesCog(commands.Cog):
         self.bot = bot
         self.pfxs = callsign_info.options
 
-    @commands.slash_command(
-        name="prefixes",
-        category=cmn.Cats.REF,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
-    )
-    async def _vanity_prefixes(
-        self, ctx: std_commands.context.ApplicationContext, country: str = ""
-    ):
-        """Lists valid callsign prefixes for different countries."""
+    # region prefixes
+
+    async def _vanity_prefixes_core(
+        self, ctx: Union[ApplicationContext, commands.Context], country: str = ""
+    ) -> Embed:
         country = country.lower()
-        embed = cmn.embed_factory_slash(ctx)
+        embed = cmn.embed_factory(ctx)
         if country not in self.pfxs:
             desc = "Possible arguments are:\n"
             for key, val in self.pfxs.items():
@@ -40,8 +37,7 @@ class PrefixesCog(commands.Cog):
             embed.title = f"{country} Not Found!"
             embed.description = desc
             embed.colour = cmn.colours.bad
-            await ctx.send_response(embed=embed)
-            return
+            return embed
         else:
             data = self.pfxs[country]
             embed.title = data.title + ("  " + data.emoji if data.emoji else "")
@@ -50,7 +46,26 @@ class PrefixesCog(commands.Cog):
 
             for name, val in data.calls.items():
                 embed.add_field(name=name, value=val, inline=False)
-        await ctx.send_response(embed=embed)
+            return embed
+
+    @commands.slash_command(
+        name="prefixes",
+        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    )
+    async def _vanity_prefixes_slash(self, ctx: ApplicationContext, country: str = ""):
+        """Lists valid callsign prefixes for different countries."""
+        await ctx.send_response(embed=await self._vanity_prefixes_core(ctx, country))
+
+    @commands.command(
+        name="prefixes",
+        aliases=["vanity", "pfx", "vanities", "prefix"],
+        category=cmn.Cats.REF,
+    )
+    async def _vanity_prefixes_prefix(self, ctx: commands.Context, country: str = ""):
+        """Lists valid callsign prefixes for different countries."""
+        await ctx.send(embed=await self._vanity_prefixes_core(ctx, country))
+
+    # endregion
 
 
 def setup(bot: commands.Bot):

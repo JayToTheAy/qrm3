@@ -11,6 +11,7 @@ from enum import Enum
 from typing import Optional
 from dataclasses import dataclass
 
+from discord import SlashCommandGroup, IntegrationType, ApplicationContext
 import discord.ext.commands as commands
 
 import common as cmn
@@ -20,6 +21,7 @@ from data import options as opt
 # not sure why but UnitConverter and Unit need to be defined before DbConvCog and convert()
 class UnitConverter(commands.Converter):
 
+    # dead code?
     async def convert(self, ctx: commands.Context, argument: str):
         is_db = None
         mult = None
@@ -64,11 +66,78 @@ class Unit:
 
 class DbConvCog(commands.Cog):
 
+    calc_cat = SlashCommandGroup("math", "Math Calculation Operations")
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    # region dbconv
+
+    # TODO: share a common base b/w commands
+
+    @commands.slash_command(
+        name="dbconv",
+        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    )
+    async def _db_conv_slash(
+        self,
+        ctx: ApplicationContext,
+        value: Optional[float] = None,
+        unit_from: Optional[UnitConverter] = None,
+        unit_to: Optional[UnitConverter] = None,  # TODO: autocomplete
+    ):
+        """
+        Convert between decibels and scalar values for voltage, power, and antenna gain.
+
+        **Valid Units**
+        *Voltage:* V, mV, µV, uV, dBV, dBmV, dBµV, dBuV
+        *Power:* fW, mW, W, kW, dBf, dBm, dBW, dBk
+        *Antenna Gain:* dBi, dBd, dBq
+        """
+        embed = cmn.embed_factory(ctx)
+        if value is not None and unit_from is not None and unit_to is not None:
+            converted = convert(value, unit_from, unit_to)
+
+            embed.title = (
+                f"{value:.3g} {unit_from.unit} = {converted:.3g} {unit_to.unit}"
+            )
+            embed.colour = cmn.colours.good
+        else:
+            embed.title = "Decibel Quick Reference"
+            embed.description = (
+                "Decibels are a great way to easily represent large quantities that are common in electronics. "
+                "There are a few main types that are used often in radio: voltage, power, and antenna gain. "
+                "Here are some commonly-used reference levels for each type:"
+            )
+            v_db_info = (
+                "**dBV** = relative to 1 V\n"
+                "**dBmV** = relative to 1 mV (1e-3 V)\n"
+                "**dBµV** = relative to 1 µV (1e-6 V)"
+            )
+            embed.add_field(name="Voltage Decibels", value=v_db_info, inline=False)
+            p_db_info = (
+                "**dBW** = relative to 1 W\n"
+                "**dBk** = relative to 1 kW (1e3 W)\n"
+                "**dBm** = relative to 1 mW (1e-3 W)\n"
+                "**dBf** = relative to 1 fW (1e-15 W)"
+            )
+            embed.add_field(name="Power Decibels", value=p_db_info, inline=False)
+            a_db_info = (
+                "**dBi** = relative to a theoretical __i__sotropic radiator in free space "
+                "(equal radiation in all directions)\n"
+                "**dBd** = relative to a dipole in free space (0 dBd = 2.15 dBi)\n"
+                "**dBq** = relative to a quarter-wave antenna in free space (0 dBq = -0.85 dBi)"
+            )
+            embed.add_field(name="Antenna Gain Decibels", value=a_db_info, inline=False)
+            embed.add_field(
+                name="Use the bot to do the conversions",
+                value=f"`{opt.display_prefix}dbconv [value] [unit_from] [unit_to]`",
+                inline=False,
+            )
+        await ctx.send_response(embed=embed)
+
     @commands.command(name="dbconv", aliases=["dbc"], category=cmn.Cats.CALC)
-    async def _db_conv(
+    async def _db_conv_prefix(
         self,
         ctx: commands.Context,
         value: Optional[float] = None,
@@ -124,6 +193,8 @@ class DbConvCog(commands.Cog):
                 inline=False,
             )
         await ctx.send(embed=embed)
+
+        # endregion
 
 
 def setup(bot: commands.Bot):

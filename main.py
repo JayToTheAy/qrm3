@@ -46,7 +46,12 @@ debug_mode = (
 # --- Bot setup ---
 
 # Loop/aiohttp stuff
-loop = asyncio.get_event_loop()
+try:
+    loop = asyncio.get_event_loop()
+except RuntimeError:
+    # restore <=3.13 get_event_loop() behaviour
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 connector = loop.run_until_complete(conn.new_connector())
 
 # Defining the intents
@@ -92,11 +97,6 @@ async def _restart_bot(ctx: commands.Context):
     print(f"[**] Restarting! Requested by {ctx.author}.")
     exit_code = 42  # Signals to the wrapper script that the bot needs to be restarted.
     await bot.close()
-
-
-@bot.slash_command(name="ping", category=cmn.BoltCats.ADMIN)
-async def ping(ctx):  # a slash command will be created with the name "ping"
-    await ctx.send_response(f"Pong! Latency is {bot.latency}")
 
 
 @bot.command(name="shutdown", aliases=["shut"], category=cmn.BoltCats.ADMIN)
@@ -250,7 +250,7 @@ async def on_command_error(ctx: commands.Context, err: commands.CommandError):
         traceback.print_exception(type(err), err, err.__traceback__, file=sys.stderr)
 
         embed = cmn.error_embed_factory(ctx, err.original, bot.qrm.debug_mode)
-        embed.description += f"\n`{type(err).__name__}`"
+        embed.description += f"\n`{type(err).__name__}`"  # type: ignore
         await cmn.add_react(ctx.message, cmn.emojis.warning)
         await ctx.send(embed=embed)
     else:
@@ -258,6 +258,44 @@ async def on_command_error(ctx: commands.Context, err: commands.CommandError):
         print("Ignoring exception in command {}:".format(ctx.command), file=sys.stderr)
         traceback.print_exception(type(err), err, err.__traceback__, file=sys.stderr)
         await cmn.add_react(ctx.message, cmn.emojis.warning)
+
+
+@bot.event
+async def on_application_command_error(
+    ctx: discord.ApplicationContext, err: discord.DiscordException
+):
+    if isinstance(err, commands.UserInputError):
+        await ctx.respond(
+            "An unknown user input error occurred. Please try again.", ephemeral=True
+        )
+    elif isinstance(err, commands.CheckFailure):
+        await ctx.respond(
+            "A Check Failure occurred. You may not have permission to use this command.",
+            ephemeral=True,
+        )
+    elif isinstance(err, commands.DisabledCommand):
+        await ctx.respond("This command has been disabled.", ephemeral=True)
+    elif isinstance(err, (commands.CommandInvokeError, commands.ConversionError)):
+        # Emulating discord.py's default behavior.
+        print(
+            "Ignoring exception in command {}:".format(ctx.command.name),
+            file=sys.stderr,
+        )
+        traceback.print_exception(type(err), err, err.__traceback__, file=sys.stderr)
+
+        embed = cmn.error_embed_factory(ctx, err.original, bot.qrm.debug_mode)
+        embed.description += f"\n`{type(err).__name__}`"  # type: ignore
+        await ctx.respond(embed=embed, ephemeral=True)
+    else:
+        # Emulating discord.py's default behavior. (safest bet)
+        print(
+            "Ignoring exception in command {}:".format(ctx.command.name),
+            file=sys.stderr,
+        )
+        traceback.print_exception(type(err), err, err.__traceback__, file=sys.stderr)
+        await ctx.respond(
+            "An unknown error occurred while processing your command.", ephemeral=True
+        )
 
 
 # --- Tasks ---

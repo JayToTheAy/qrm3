@@ -1,3 +1,6 @@
 [flake8]
 max-line-length = 120
+extend-ignore =
+    # dynamicly built autocomplete for slash command parameters doesn't play nice w/ F722
+    F722
 exclude = .venv, __pycache__

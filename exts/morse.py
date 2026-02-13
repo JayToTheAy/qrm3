@@ -7,10 +7,10 @@ SPDX-License-Identifier: LiLiQ-Rplus-1.1
 """
 
 import json
+from typing import Union
 
 import discord.ext.commands as commands
-from discord import commands as std_commands
-from discord import IntegrationType
+from discord import ApplicationContext, Embed, IntegrationType, SlashCommandGroup
 
 import common as cmn
 
@@ -24,13 +24,17 @@ class MorseCog(commands.Cog):
             self.morse: dict[str, str] = d["morse"]
             self.ascii: dict[str, str] = d["ascii"]
 
-    @commands.slash_command(
-        name="morse",
-        category=cmn.Cats.CODES,
+    morse_cat = SlashCommandGroup(
+        "cw",
+        "Morse code commands",
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
-    async def _morse(self, ctx: std_commands.context.ApplicationContext, msg: str):
-        """Converts ASCII to international morse code."""
+
+    # region morsify
+
+    async def _morse_core(
+        self, ctx: Union[ApplicationContext, commands.Context], msg: str
+    ) -> Embed:
         result = ""
         for char in msg.upper():
             try:
@@ -38,19 +42,31 @@ class MorseCog(commands.Cog):
             except KeyError:
                 result += "<?>"
             result += " "
-        embed = cmn.embed_factory_slash(ctx)
+        embed = cmn.embed_factory(ctx)
         embed.title = f"Morse Code for {msg}"
-        embed.description = "**" + result + "**"
+        embed.description = "**`" + result + "`**"
         embed.colour = cmn.colours.good
-        await ctx.send_response(embed=embed)
+        return embed
 
-    @commands.slash_command(
-        name="unmorse",
-        category=cmn.Cats.CODES,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    @morse_cat.command(
+        name="morsify",
     )
-    async def _unmorse(self, ctx: std_commands.context.ApplicationContext, msg: str):
-        """Converts international morse code to ASCII."""
+    async def _morse_slash(self, ctx: ApplicationContext, msg: str):
+        """Converts ASCII to international morse code."""
+        await ctx.send_response(embed=await self._morse_core(ctx, msg))
+
+    @commands.command(name="morse", aliases=["cw"], category=cmn.Cats.CODES)
+    async def _morse_prefix(self, ctx: commands.Context, *, msg: str):
+        """Converts ASCII to international morse code."""
+        await ctx.send(embed=await self._morse_core(ctx, msg))
+
+    # endregion
+
+    # region unmorsify
+
+    async def _unmorse_core(
+        self, ctx: Union[ApplicationContext, commands.Context], msg: str
+    ) -> Embed:
         result = ""
         msg0 = msg
         list_msg: list[str] = msg.split("/")
@@ -62,20 +78,34 @@ class MorseCog(commands.Cog):
                 except KeyError:
                     result += "<?>"
             result += " "
-        embed = cmn.embed_factory_slash(ctx)
+        embed = cmn.embed_factory(ctx)
         embed.title = f"ASCII for {msg0}"
-        embed.description = result
+        embed.description = "`" + result + "`"
         embed.colour = cmn.colours.good
-        await ctx.send_response(embed=embed)
+        return embed
 
-    @commands.slash_command(
-        name="cwweight",
-        category=cmn.Cats.CODES,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    @morse_cat.command(
+        name="unmorsify",
     )
-    async def _weight(self, ctx: std_commands.context.ApplicationContext, msg: str):
-        """Calculates the CW weight of a callsign or message."""
-        embed = cmn.embed_factory_slash(ctx)
+    async def _unmorse_slash(self, ctx: ApplicationContext, msg: str):
+        """Converts international morse code to ASCII."""
+        await ctx.send_response(embed=await self._unmorse_core(ctx, msg))
+
+    @commands.command(
+        name="unmorse", aliases=["demorse", "uncw", "decw"], category=cmn.Cats.CODES
+    )
+    async def _unmorse_prefix(self, ctx: commands.Context, *, msg: str):
+        """Converts international morse code to ASCII."""
+        await ctx.send(embed=await self._unmorse_core(ctx, msg))
+
+    # endregion
+
+    # region weight
+
+    async def _weight_core(
+        self, ctx: Union[ApplicationContext, commands.Context], msg: str
+    ) -> Embed:
+        embed = cmn.embed_factory(ctx)
         msg = msg.upper()
         weight = 0
         for char in msg:
@@ -86,12 +116,27 @@ class MorseCog(commands.Cog):
                 embed.title = "Error in calculation of CW weight"
                 embed.description = f"Unknown character `{char}` in message"
                 embed.colour = cmn.colours.bad
-                await ctx.send_response(embed=embed)
-                return
+                return embed
         embed.title = f"CW Weight of {msg}"
         embed.description = f"The CW weight is **{weight}**"
         embed.colour = cmn.colours.good
-        await ctx.send_response(embed=embed)
+        return embed
+
+    @morse_cat.command(
+        name="weight",
+    )
+    async def _weight_slash(self, ctx: ApplicationContext, msg: str):
+        """Calculates the CW weight of a callsign or message."""
+        await ctx.send_response(embed=await self._weight_core(ctx, msg))
+
+    @commands.command(
+        name="cwweight", aliases=["weight", "cww"], category=cmn.Cats.CODES
+    )
+    async def _weight_prefix(self, ctx: commands.Context, *, msg: str):
+        """Calculates the CW weight of a callsign or message."""
+        await ctx.send(embed=await self._weight_core(ctx, msg))
+
+    # endregion
 
 
 def setup(bot: commands.Bot):

@@ -26,7 +26,7 @@ RUN \
         /tmp/* \
         /var/cache/*
 
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 USER $UID:$GID
 

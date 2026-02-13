@@ -1,8 +1,8 @@
-# Docker help for qrm2
+# Docker help for qrm3
 
-You have multiple ways to use docker to run an instance of qrm2.
+You have multiple ways to use docker to run an instance of qrm3.
 
-- [Docker help for qrm2](#docker-help-for-qrm2)
+- [Docker help for qrm3](#docker-help-for-qrm3)
   - [Using docker-compose and the prebuilt-image (recommended)](#using-docker-compose-and-the-prebuilt-image-recommended)
   - [Using docker-compose and building the image](#using-docker-compose-and-building-the-image)
   - [Using pure docker](#using-pure-docker)
@@ -12,7 +12,7 @@ You have multiple ways to use docker to run an instance of qrm2.
 
 ## Using docker-compose and the prebuilt-image (recommended)
 
-This is the easiest method for running the bot without any modifications.  
+This is the easiest method for running the bot without any modifications.
 **Do not clone the repository when using this method!**
 
 1. Create a new directory and `cd` into it.
@@ -20,13 +20,21 @@ This is the easiest method for running the bot without any modifications.
 2. Create the `docker-compose.yml` file:
 
     ```yaml
-    version: '3'
     services:
-      qrm2:
-        image: "ghcr.io/miaowware/qrm2:latest"
+      qrm3:
+        build: .
+        image: "ghcr.io/jaytotheay/qrm3:latest"
         restart: on-failure
         volumes:
           - "./data:/app/data:rw"
+
+      rtex:
+        image: "ghcr.io/jaytotheay/rtex:dev"
+        restart: on-failure
+        volumes:
+          - "./data:/app/data:rw"
+        environment:
+          - PYTHONUNBUFFERED=1
     ```
 
 3. Create a subdirectory named `data`.
@@ -36,8 +44,8 @@ This is the easiest method for running the bot without any modifications.
 5. Run `docker-compose`:
 
     ```none
-    $ docker-compose pull
-    $ docker-compose up -d
+    $ docker compose pull
+    $ docker compose up -d
     ```
 
     *Run without "-d" to test the bot (run in foreground).*
@@ -53,15 +61,16 @@ This is the easiest method to run the bot with modifications.
 2. Create the `docker-compose.yml` file:
 
     ```yaml
-    version: '3'
     services:
-      qrm2:
+      qrm3:
         build: .
-        image: "qrm2:local-latest"
+        image: "qrm3:local-latest"
         restart: on-failure
         volumes:
           - "./data:/app/data:rw"
     ```
+
+You should consider also including in your `docker-compose.yml` a LaTeX rendering server. See the [prebuilt image .yml](#using-docker-compose-and-the-prebuilt-image-recommended) for an example of how this looks with rTeX.
 
 3. Create a subdirectory named `data`.
 
@@ -80,7 +89,7 @@ This is the easiest method to run the bot with modifications.
 
 ## Using pure docker
 
-This methods is not very nice to use.  
+This method is not very nice to use.
 *I just wanna run the darn thing, not do gymnastics!*
 
 
@@ -91,7 +100,7 @@ This methods is not very nice to use.
 2. Run docker build:
 
     ```none
-    $ docker build -t qrm2:local-latest .
+    $ docker build -t qrm3:local-latest .
     ```
 
 
@@ -102,9 +111,9 @@ This methods is not very nice to use.
 2. Run the container:
 
     ```none
-    $ docker run -d --rm --mount type=bind,src=$(pwd)/data,dst=/app/data --name qrm2 [image]
+    $ docker run -d --rm --mount type=bind,src=$(pwd)/data,dst=/app/data --name qrm3 [image]
     ```
 
     Where `[image]` is either of:
-    - `qrm2:local-latest` if you are building your own.
-    - `ghcr.io/miaowware/qrm2:latest` if you want to use the prebuilt image.
+    - `qrm3:local-latest` if you are building your own.
+    - `ghcr.io/jaytotheay/qrm3:latest` if you want to use the prebuilt image.
