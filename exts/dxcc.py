@@ -8,11 +8,12 @@ SPDX-License-Identifier: LiLiQ-Rplus-1.1
 """
 
 import threading
+from typing import Union
 from pathlib import Path
 
 from ctyparser import BigCty
 
-from discord import IntegrationType, ApplicationContext
+from discord import ApplicationContext, Embed, IntegrationType
 from discord.ext import commands, tasks
 
 import common as cmn
@@ -30,18 +31,14 @@ class DXCCCog(commands.Cog):
         except OSError:
             self.cty = BigCty()
 
-    @commands.slash_command(
-        name="dxcc",
-        category=cmn.Cats.LOOKUP,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
-    )
-    async def _dxcc_lookup(
+    # region dxcc
+
+    async def _dxcc_lookup_core(
         self,
-        ctx: ApplicationContext,
+        ctx: Union[ApplicationContext, commands.Context],
         query: str,
         private: bool = False,
-    ):
-        """Gets DXCC info about a callsign prefix."""
+    ) -> Embed:
         query = query.upper()
         full_query = query
         embed = cmn.embed_factory(ctx)
@@ -67,7 +64,33 @@ class DXCCCog(commands.Cog):
         else:
             embed.title += full_query + " not found"
             embed.colour = cmn.colours.bad
-        await ctx.send_response(embed=embed, ephemeral=private)
+        return embed
+
+    @commands.slash_command(
+        name="dxcc",
+        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    )
+    async def _dxcc_lookup_slash(
+        self,
+        ctx: ApplicationContext,
+        query: str,
+        private: bool = False,
+    ):
+        """Gets DXCC info about a callsign prefix."""
+        await ctx.send_response(
+            embed=await self._dxcc_lookup_core(ctx, query), ephemeral=private
+        )
+
+    @commands.command(name="dxcc", aliases=["dx"], category=cmn.Cats.LOOKUP)
+    async def _dxcc_lookup_prefix(
+        self,
+        ctx: commands.Context,
+        query: str,
+    ):
+        """Gets DXCC info about a callsign prefix."""
+        await ctx.send(embed=await self._dxcc_lookup_core(ctx, query))
+
+    # endregion
 
     @tasks.loop(hours=24)
     async def _update_cty(self):

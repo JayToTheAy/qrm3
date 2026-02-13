@@ -7,9 +7,10 @@ SPDX-License-Identifier: LiLiQ-Rplus-1.1
 """
 
 import aiohttp
+from typing import Union
 
 import discord.ext.commands as commands
-from discord import IntegrationType, ApplicationContext
+from discord import ApplicationContext, Embed, IntegrationType
 
 import common as cmn
 
@@ -24,29 +25,49 @@ class ImageCog(commands.Cog):
         self.maps = cmn.ImagesGroup(cmn.paths.resources / "maps.1.json")
         self.session = aiohttp.ClientSession(connector=bot.qrm.connector)
 
+    # region bandchart
+
     @commands.slash_command(
         name="bandchart",
         category=cmn.Cats.REF,
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
-    async def _bandcharts(self, ctx: ApplicationContext, chart_id: str = ""):
+    async def _bandcharts_slash(self, ctx: ApplicationContext, chart_id: str = ""):
         """Gets the frequency allocations chart for a given country."""
         await ctx.send_response(
             embed=create_embed(ctx, "Bandchart", self.bandcharts, chart_id)
         )
+
+    @commands.command(
+        name="bandchart", aliases=["bandplan", "plan", "bands"], category=cmn.Cats.REF
+    )
+    async def _bandcharts_prefix(self, ctx: commands.Context, chart_id: str = ""):
+        """Gets the frequency allocations chart for a given country."""
+        await ctx.send(embed=create_embed(ctx, "Bandchart", self.bandcharts, chart_id))
+
+    # endregion
+
+    # region map
 
     @commands.slash_command(
         name="map",
         category=cmn.Cats.REF,
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
-    async def _map(self, ctx: ApplicationContext, map_id: str = ""):
+    async def _map_slash(self, ctx: ApplicationContext, map_id: str = ""):
         """Posts a ham-relevant map."""
         await ctx.send_response(embed=create_embed(ctx, "Map", self.maps, map_id))
 
+    @commands.command(name="map", category=cmn.Cats.REF)
+    async def _map_prefix(self, ctx: commands.Context, map_id: str = ""):
+        """Posts a ham-relevant map."""
+        await ctx.send(embed=create_embed(ctx, "Map", self.maps, map_id))
+
+    # endregion
+
 
 def create_embed(
-    ctx: ApplicationContext,
+    ctx: Union[ApplicationContext, commands.Context],
     not_found_name: str,
     db: cmn.ImagesGroup,
     img_id: str,

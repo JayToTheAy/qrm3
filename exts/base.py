@@ -9,12 +9,12 @@ SPDX-License-Identifier: LiLiQ-Rplus-1.1
 import inspect
 import random
 import re
-from typing import Union, Iterable
+from typing import Iterable, Tuple, Union
 import pathlib
 
 import discord
 import discord.ext.commands as commands
-from discord import ApplicationContext, IntegrationType
+from discord import ApplicationContext, Embed, IntegrationType
 from discord.ext.commands import Command, CommandError
 
 import info
@@ -198,8 +198,11 @@ class BaseCog(commands.Cog):
                 f"&scope=bot&permissions={opt.invite_perms}"
             )
 
-    @commands.command(name="info", aliases=["about"], category=cmn.BoltCats.INFO)
-    async def _info(self, ctx: commands.Context):
+    # region info
+
+    async def _info_core(
+        self, ctx: Union[ApplicationContext, commands.Context]
+    ) -> Embed:
         """Shows info about qrm."""
         embed = cmn.embed_factory(ctx)
         embed.title = "About qrm"
@@ -227,7 +230,38 @@ class BaseCog(commands.Cog):
             )
         if self.bot.user and self.bot.user.avatar:
             embed.set_thumbnail(url=str(self.bot.user.avatar.url))
-        await ctx.send(embed=embed)
+        return embed
+
+    @commands.slash_command(
+        name="info",
+        integration_types={
+            IntegrationType.guild_install,
+            IntegrationType.user_install,
+        },
+    )
+    async def _info_slash(self, ctx: ApplicationContext):
+        """Shows info about qrm."""
+        await ctx.send_response(embed=await self._info_core(ctx))
+
+    @commands.command(name="info", aliases=["about"], category=cmn.BoltCats.INFO)
+    async def _info_prefix(self, ctx: commands.Context):
+        """Shows info about qrm."""
+        await ctx.send(embed=await self._info_core(ctx))
+
+    # endregion
+
+    # region ping
+
+    async def _ping_core(
+        self, ctx: Union[ApplicationContext, commands.Context]
+    ) -> Tuple[str, Embed]:
+        """Shows the current latency to the discord endpoint."""
+        embed = cmn.embed_factory(ctx)
+        content = ""
+        content = ctx.message.author.mention if random.random() < 0.05 else ""
+        embed.title = "🏓 **Pong!**"
+        embed.description = f"Current ping is {self.bot.latency*1000:.1f} ms"
+        return (content, embed)
 
     @commands.slash_command(
         name="ping",
@@ -236,23 +270,24 @@ class BaseCog(commands.Cog):
             IntegrationType.user_install,
         },
     )
-    async def _ping(self, ctx: ApplicationContext):
+    async def _ping_slash(self, ctx: ApplicationContext):
         """Shows the current latency to the discord endpoint."""
-        embed = cmn.embed_factory(ctx)
-        content = ""
-        content = ctx.message.author.mention if random.random() < 0.05 else ""
-        embed.title = "🏓 **Pong!**"
-        embed.description = f"Current ping is {self.bot.latency*1000:.1f} ms"
+        content, embed = await self._ping_core(ctx)
         await ctx.send_response(content, embed=embed)
 
-    @commands.slash_command(
-        name="changelog",
-        integration_types={
-            IntegrationType.guild_install,
-            IntegrationType.user_install,
-        },
-    )
-    async def _changelog(self, ctx: ApplicationContext, version: str = "latest"):
+    @commands.command(name="ping", category=cmn.BoltCats.INFO)
+    async def _ping_prefix(self, ctx: commands.Context):
+        """Shows the current latency to the discord endpoint."""
+        content, embed = await self._ping_core(ctx)
+        await ctx.send(content, embed=embed)
+
+    # endregion
+
+    # region changelog
+
+    async def _changelog_core(
+        self, ctx: Union[ApplicationContext, commands.Context], version: str = "latest"
+    ) -> Embed:
         """Shows what has changed in a bot version. Defaults to the latest version."""
         embed = cmn.embed_factory(ctx)
         embed.title = "qrm Changelog"
@@ -278,8 +313,7 @@ class BaseCog(commands.Cog):
             embed.description += "\n\n**Valid versions:** latest, "
             embed.description += ", ".join(vers)
             embed.colour = cmn.colours.bad
-            await ctx.send_response(embed=embed)
-            return
+            return embed
 
         if "date" in log:
             embed.description += f"\n\n**v{version}** ({log['date']})"
@@ -287,7 +321,36 @@ class BaseCog(commands.Cog):
             embed.description += f"\n\n**v{version}**"
         embed = await format_changelog(log, embed)
 
-        await ctx.send_response(embed=embed)
+        return embed
+
+    @commands.slash_command(
+        name="changelog",
+        integration_types={
+            IntegrationType.guild_install,
+            IntegrationType.user_install,
+        },
+    )
+    async def _changelog_slash(self, ctx: ApplicationContext, version: str = "latest"):
+        """Shows what has changed in a bot version. Defaults to the latest version."""
+        await ctx.send_response(embed=await self._changelog_core(ctx, version))
+
+    @commands.command(name="changelog", aliases=["clog"], category=cmn.BoltCats.INFO)
+    async def _changelog_prefix(self, ctx: commands.Context, version: str = "latest"):
+        """Shows what has changed in a bot version. Defaults to the latest version."""
+        await ctx.send(embed=await self._changelog_core(ctx, version))
+
+    # endregion
+
+    # region issue
+
+    async def _issue_core(
+        self, ctx: Union[ApplicationContext, commands.Context]
+    ) -> Embed:
+        """Shows how to create a bug report or feature request about the bot."""
+        embed = cmn.embed_factory(ctx)
+        embed.title = "Found a bug? Have a feature request?"
+        embed.description = inspect.cleandoc(info.issue_tracker)
+        return embed
 
     @commands.slash_command(
         name="issue",
@@ -296,12 +359,29 @@ class BaseCog(commands.Cog):
             IntegrationType.user_install,
         },
     )
-    async def _issue(self, ctx: ApplicationContext):
+    async def _issue_slash(self, ctx: ApplicationContext):
         """Shows how to create a bug report or feature request about the bot."""
+        await ctx.send_response(embed=await self._issue_core(ctx))
+
+    @commands.command(name="issue", category=cmn.BoltCats.INFO)
+    async def _issue_prefix(self, ctx: commands.Context):
+        """Shows how to create a bug report or feature request about the bot."""
+        await ctx.send(embed=await self._issue_core(ctx))
+
+    # endregion
+
+    # region invite
+
+    async def _invite_core(
+        self, ctx: Union[ApplicationContext, commands.Context]
+    ) -> Embed:
+        """Generates a link to invite the bot to a server."""
+        if not (await self.bot.application_info()).bot_public:
+            raise commands.DisabledCommand
         embed = cmn.embed_factory(ctx)
-        embed.title = "Found a bug? Have a feature request?"
-        embed.description = inspect.cleandoc(info.issue_tracker)
-        await ctx.send_response(embed=embed)
+        embed.title = "Invite qrm to Your Server!"
+        embed.description = self.bot_invite
+        return embed
 
     @commands.slash_command(
         name="invite",
@@ -310,14 +390,20 @@ class BaseCog(commands.Cog):
             IntegrationType.user_install,
         },
     )
-    async def _invite(self, ctx: ApplicationContext):
+    async def _invite_slash(self, ctx: ApplicationContext):
         """Generates a link to invite the bot to a server."""
-        if not (await self.bot.application_info()).bot_public:
-            raise commands.DisabledCommand
-        embed = cmn.embed_factory(ctx)
-        embed.title = "Invite qrm to Your Server!"
-        embed.description = self.bot_invite
-        await ctx.send_response(embed=embed)
+        await ctx.send_response(embed=await self._invite_core(ctx))
+
+    @commands.command(
+        name="invite", enabled=opt.enable_invite_cmd, category=cmn.BoltCats.INFO
+    )
+    async def _invite_prefix(self, ctx: commands.Context):
+        """Generates a link to invite the bot to a server."""
+        await ctx.send(embed=await self._invite_core(ctx))
+
+    # endregion
+
+    # region echo - prefix only
 
     @commands.command(name="echo", aliases=["e"], category=cmn.BoltCats.ADMIN)
     @commands.check(cmn.check_if_owner)
@@ -334,6 +420,8 @@ class BaseCog(commands.Cog):
         if isinstance(channel, discord.ClientUser):
             raise commands.BadArgument("Can't send to the bot user!")
         await ctx.send(msg)
+
+    # endregion
 
 
 def parse_changelog():

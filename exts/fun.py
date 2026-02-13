@@ -8,9 +8,10 @@ SPDX-License-Identifier: LiLiQ-Rplus-1.1
 
 import json
 import random
+from typing import Union
 
 import discord.ext.commands as commands
-from discord import IntegrationType, SlashCommandGroup, ApplicationContext
+from discord import ApplicationContext, IntegrationType, Embed, SlashCommandGroup
 
 import common as cmn
 
@@ -32,48 +33,84 @@ class FunCog(commands.Cog):
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
 
+    # region xkcd
+
     @commands.slash_command(
         name="xkcd",
-        category=cmn.Cats.FUN,
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
-    async def _xkcd(self, ctx: ApplicationContext, number: int):
+    async def _xkcd_slash(self, ctx: ApplicationContext, number: int):
         """Looks up an xkcd comic by number."""
         await ctx.send_response("http://xkcd.com/" + str(number))
 
+    @commands.command(name="xkcd", aliases=["x"], category=cmn.Cats.FUN)
+    async def _xkcd_prefix(self, ctx: commands.Context, number: int):
+        """Looks up an xkcd comic by number."""
+        await ctx.send("http://xkcd.com/" + str(number))
+
+    # endregion
+
+    # region tar
+
     @fun_cat.command(
         name="tar",
-        category=cmn.Cats.FUN,
     )
-    async def _tar(self, ctx: ApplicationContext):
+    async def _tar_slash(self, ctx: ApplicationContext):
         """Returns xkcd: tar."""
         await ctx.send_response("http://xkcd.com/1168")
 
+    @commands.command(name="tar", category=cmn.Cats.FUN)
+    async def _tar_prefix(self, ctx: commands.Context):
+        """Returns xkcd: tar."""
+        await ctx.send("http://xkcd.com/1168")
+
+    # endregion
+
+    # region standards
+
     @fun_cat.command(
         name="standards",
-        category=cmn.Cats.FUN,
     )
-    async def _standards(self, ctx: ApplicationContext):
+    async def _standards_slash(self, ctx: ApplicationContext):
         """Returns xkcd: Standards."""
         await ctx.send_response("http://xkcd.com/927")
 
-    @fun_cat.command(
-        name="worksplit",
-        category=cmn.Cats.FUN,
-    )
-    async def _worksplit(self, ctx: ApplicationContext):
-        """Posts "Work split you lids"."""
+    @commands.command(name="standards", category=cmn.Cats.FUN)
+    async def _standards_prefix(self, ctx: commands.Context):
+        """Returns xkcd: Standards."""
+        await ctx.send("http://xkcd.com/927")
+
+    # endregion
+
+    # region worksplit
+
+    async def _worksplit_core(
+        self, ctx: Union[ApplicationContext, commands.Context]
+    ) -> Embed:
         embed = cmn.embed_factory(ctx)
         embed.title = "Work Split, You Lids!"
         embed.set_image(url=opt.resources_url + self.imgs["worksplit"])
-        await ctx.send_response(embed=embed)
+        return embed
 
     @fun_cat.command(
-        name="funetics",
-        category=cmn.Cats.FUN,
+        name="worksplit",
     )
-    async def _funetics_lookup(self, ctx: ApplicationContext, msg: str):
-        """Generates fun/wacky phonetics for a word or phrase."""
+    async def _worksplit_slash(self, ctx: ApplicationContext):
+        """Posts "Work split you lids"."""
+        await ctx.send_response(embed=await self._worksplit_core(ctx))
+
+    @commands.command(name="worksplit", aliases=["split", "ft8"], category=cmn.Cats.FUN)
+    async def _worksplit_prefix(self, ctx: commands.Context):
+        """Posts "Work split you lids"."""
+        await ctx.send(embed=await self._worksplit_core(ctx))
+
+    # endregion
+
+    # region funetics
+
+    async def _funetics_lookup_core(
+        self, ctx: Union[ApplicationContext, commands.Context], msg
+    ) -> Embed:
         result = ""
         for char in msg.lower():
             if char.isalpha():
@@ -87,7 +124,21 @@ class FunCog(commands.Cog):
         embed.title = f"Funetics for {msg}"
         embed.description = result.title()
         embed.colour = cmn.colours.good
-        await ctx.send_response(embed=embed)
+        return embed
+
+    @fun_cat.command(
+        name="funetics",
+    )
+    async def _funetics_lookup_slash(self, ctx: ApplicationContext, msg: str):
+        """Generates fun/wacky phonetics for a word or phrase."""
+        await ctx.send_response(embed=await self._funetics_lookup_core(ctx, msg))
+
+    @commands.command(name="funetics", aliases=["fun"], category=cmn.Cats.FUN)
+    async def _funetics_lookup_prefix(self, ctx: commands.Context, *, msg: str):
+        """Generates fun/wacky phonetics for a word or phrase."""
+        await ctx.send(embed=await self._funetics_lookup_core(ctx, msg))
+
+    # endregion
 
 
 def setup(bot: commands.Bot):

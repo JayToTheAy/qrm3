@@ -7,9 +7,10 @@ SPDX-License-Identifier: LiLiQ-Rplus-1.1
 """
 
 from datetime import datetime, timedelta, timezone
+from typing import Union
 
 import discord.ext.commands as commands
-from discord import IntegrationType, ApplicationContext
+from discord import ApplicationContext, Embed, IntegrationType
 
 import common as cmn
 
@@ -46,28 +47,39 @@ class TimeCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(
-        name="utc",
-        category=cmn.Cats.TIME,
-        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
-    )
-    async def _utc_lookup(self, ctx: ApplicationContext):
-        """Returns the current time in UTC."""
+    # region utc
+
+    async def _utc_lookup_core(
+        self, ctx: Union[ApplicationContext, commands.Context]
+    ) -> Embed:
         now = datetime.now(timezone.utc)
         result = "**" + now.strftime("%Y-%m-%d %H:%M") + "Z**"
         embed = cmn.embed_factory(ctx)
         embed.title = "The current time is:"
         embed.description = result
         embed.colour = cmn.colours.good
-        await ctx.send_response(embed=embed)
+        return embed
 
     @commands.slash_command(
-        name="miltime",
-        category=cmn.Cats.TIME,
+        name="utc",
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
-    async def miltime(self, ctx: ApplicationContext):
-        """Prints the current time in all 25 military time zones."""
+    async def _utc_lookup_slash(self, ctx: ApplicationContext):
+        """Returns the current time in UTC."""
+        await ctx.send_response(embed=await self._utc_lookup_core(ctx))
+
+    @commands.command(name="utc", aliases=["z"], category=cmn.Cats.TIME)
+    async def _utc_lookup_prefix(self, ctx: commands.Context):
+        """Returns the current time in UTC."""
+        await ctx.send(embed=await self._utc_lookup_core(ctx))
+
+    # endregion
+
+    # region miltime
+
+    async def _miltime_core(
+        self, ctx: Union[ApplicationContext, commands.Context]
+    ) -> Embed:
         time = datetime.now()
         embed = cmn.embed_factory(ctx)
         embed.title = f"{cmn.emojis.clock} Military Time Zones Now"
@@ -85,7 +97,22 @@ class TimeCog(commands.Cog):
                 "You can check the NATO phonetics for a letter using the `/phonetics` command."
             ),
         )
-        await ctx.send_response(embed=embed)
+        return embed
+
+    @commands.slash_command(
+        name="miltime",
+        integration_types={IntegrationType.guild_install, IntegrationType.user_install},
+    )
+    async def _miltime_slash(self, ctx: ApplicationContext):
+        """Prints the current time in all 25 military time zones."""
+        await ctx.send_response(embed=await self._miltime_core(ctx))
+
+    @commands.command(name="miltime", category=cmn.Cats.TIME)
+    async def _miltime_prefix(self, ctx: commands.Context):
+        """Prints the current time in all 25 military time zones."""
+        await ctx.send(embed=await self._miltime_core(ctx))
+
+    # endregion
 
 
 def setup(bot: commands.Bot):

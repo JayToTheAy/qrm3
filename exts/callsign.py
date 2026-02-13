@@ -7,12 +7,12 @@ Copyright (C) 2021-2023 classabbyamp, 0x5c
 SPDX-License-Identifier: LiLiQ-Rplus-1.1
 """
 
-from typing import Dict
+from typing import Dict, Union
 
 import aiohttp
 from callsignlookuptools import QrzAsyncClient, CallsignLookupError, CallsignData
 
-from discord import IntegrationType, ApplicationContext
+from discord import IntegrationType, ApplicationContext, Embed
 from discord.ext import commands
 
 import common as cmn
@@ -45,9 +45,44 @@ class QRZCog(commands.Cog):
         except AttributeError:
             pass
 
+    # region QRZ Lookup
+
+    async def _qrz_lookup_core(
+        self, ctx: Union[ApplicationContext, commands.Context], callsign: str
+    ) -> Embed:
+        """Builds an embed for a QRZ Lookup."""
+
+        embed = cmn.embed_factory(ctx)
+        embed.title = f"QRZ Data for {callsign.upper()}"
+
+        if self.qrz is None:
+            embed.colour = cmn.colours.neutral
+            embed.add_field(
+                name="Link", value=f"http://qrz.com/db/{callsign}", inline=False
+            )
+            return embed
+        else:
+            try:
+                data = await self.qrz.search(callsign)
+            except CallsignLookupError as e:
+                embed.colour = cmn.colours.bad
+                embed.description = str(e)
+                return embed
+            else:
+                embed.title = f"QRZ Data for {data.callsign}"
+                embed.colour = cmn.colours.good
+                embed.url = data.url
+                if data.image is not None:
+                    embed.set_thumbnail(url=data.image.url)
+
+                for title, val in qrz_process_info(data).items():
+                    if val is not None and (val := str(val)):
+                        embed.add_field(name=title, value=val, inline=True)
+
+                return embed
+
     @commands.slash_command(
         name="call",
-        category=cmn.Cats.LOOKUP,
         integration_types={IntegrationType.guild_install, IntegrationType.user_install},
     )
     async def _qrz_lookup_slash(
@@ -56,32 +91,18 @@ class QRZCog(commands.Cog):
         callsign: str,
         private: bool = False,
     ):
-        if self.qrz is None:
-            await ctx.send_response(f"http://qrz.com/db/{callsign}", ephemeral=private)
-            return
-
-        embed = cmn.embed_factory(ctx)
-        embed.title = f"QRZ Data for {callsign.upper()}"
-
+        """Looks up a callsign on [QRZ.com](https://www.qrz.com/)."""
         await ctx.defer(ephemeral=private)
-        try:
-            data = await self.qrz.search(callsign)
-        except CallsignLookupError as e:
-            embed.colour = cmn.colours.bad
-            embed.description = str(e)
-            await ctx.send_followup(embed=embed, ephemeral=private)
-            return
 
-        embed.title = f"QRZ Data for {data.callsign}"
-        embed.colour = cmn.colours.good
-        embed.url = data.url
-        if data.image is not None:
-            embed.set_thumbnail(url=data.image.url)
+        await ctx.send_followup(
+            embed=await self._qrz_lookup_core(ctx, callsign), ephemeral=private
+        )
 
-        for title, val in qrz_process_info(data).items():
-            if val is not None and (val := str(val)):
-                embed.add_field(name=title, value=val, inline=True)
-        await ctx.send_followup(embed=embed, ephemeral=private)
+    @commands.command(name="call", aliases=["qrz"], category=cmn.Cats.LOOKUP)
+    async def _qrz_lookup_prefix(self, ctx: commands.Context, callsign: str):
+        """Looks up a callsign on [QRZ.com](https://www.qrz.com/)."""
+        async with ctx.typing():
+            await ctx.send(embed=await self._qrz_lookup_core(ctx, callsign))
 
 
 def qrz_process_info(data: CallsignData) -> Dict:
@@ -126,6 +147,8 @@ def qrz_process_info(data: CallsignData) -> Dict:
         "Trustee": data.trustee,
         "Born": data.born,
     } | qsl
+
+    # endregion
 
 
 def setup(bot):

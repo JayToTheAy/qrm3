@@ -93,4 +93,5 @@ msg_reacts = {}
 pika = 1271888780340756651
 
 # Base URL to a deployment of rTeX, which performs LaTeX rendering.
-rtex_instance = "https://rtex.probablyaweb.site/"
+rtex_instance = "http://rtex:5000"
+rtex_attribution = "https://rtex.probablyaweb.site/"
