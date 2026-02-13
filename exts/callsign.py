@@ -38,7 +38,7 @@ class QRZCog(commands.Cog):
                 self.qrz = QrzAsyncClient(
                     username=keys.qrz_user,
                     password=keys.qrz_pass,
-                    useragent="discord-qrm2",
+                    useragent="discord-qrm3",
                     session_key=session_key,
                     session=aiohttp.ClientSession(connector=bot.qrm.connector),
                 )

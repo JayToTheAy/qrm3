@@ -71,7 +71,7 @@ def create_embed(
     not_found_name: str,
     db: cmn.ImagesGroup,
     img_id: str,
-):
+) -> Embed:
     """Creates an embed for the image and its metadata, or list available images in the group."""
     img_id = img_id.lower()
     embed = cmn.embed_factory(ctx)
