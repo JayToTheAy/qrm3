@@ -60,7 +60,7 @@ intents = discord.Intents.default()
 # intents.guilds = True
 # intents.messages = True
 # intents.reactions = True
-# intents.message_content = False
+intents.message_content = True
 
 member_cache = discord.MemberCacheFlags.from_intents(intents)
 
