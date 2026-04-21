@@ -23,6 +23,7 @@ class MorseCog(commands.Cog):
             d = json.load(file)
             self.morse: dict[str, str] = d["morse"]
             self.ascii: dict[str, str] = d["ascii"]
+            self.ascii_middot: dict[str, str] = d["ascii-middot"]
 
     morse_cat = SlashCommandGroup(
         "cw",
@@ -76,7 +77,10 @@ class MorseCog(commands.Cog):
                 try:
                     result += self.ascii[char]
                 except KeyError:
-                    result += "<?>"
+                    try:
+                        result += self.ascii_middot[char]
+                    except KeyError:
+                        result += "<?>"
             result += " "
         embed = cmn.embed_factory(ctx)
         embed.title = f"ASCII for {msg0}"
