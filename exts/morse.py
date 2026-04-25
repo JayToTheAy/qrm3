@@ -6,6 +6,7 @@ Copyright (C) 2019-2023 classabbyamp, 0x5c
 SPDX-License-Identifier: LiLiQ-Rplus-1.1
 """
 
+import asyncio
 import json
 from typing import Union
 
@@ -23,7 +24,6 @@ class MorseCog(commands.Cog):
             d = json.load(file)
             self.morse: dict[str, str] = d["morse"]
             self.ascii: dict[str, str] = d["ascii"]
-            self.ascii_middot: dict[str, str] = d["ascii-middot"]
 
     morse_cat = SlashCommandGroup(
         "cw",
@@ -64,6 +64,16 @@ class MorseCog(commands.Cog):
     # endregion
 
     # region unmorsify
+    def _normalize_word(word: str):
+        return (
+            word.replace("·", ".")  # U+00B7 middle dot
+            .replace("–", "-")  # U+2013 en-dash
+            .replace("—", "-")  # U+2014 em-dash
+            .replace("‧", ".")  # U+2027 hyphenation point
+            .replace("∙", ".")  # U+2219 bullet
+            .replace("⋅", ".")  # U+22C5 dot operator
+            .replace("ꞏ", ".")  # U+A78F sinological dot
+        )
 
     async def _unmorse_core(
         self, ctx: Union[ApplicationContext, commands.Context], msg: str
@@ -73,14 +83,12 @@ class MorseCog(commands.Cog):
         list_msg: list[str] = msg.split("/")
         brokenup_msg: list[list[str]] = [m.split() for m in list_msg]
         for word in brokenup_msg:
-            for char in word:
+            normalized_word = await asyncio.to_thread(self._normalize_word, word)
+            for char in normalized_word:
                 try:
                     result += self.ascii[char]
                 except KeyError:
-                    try:
-                        result += self.ascii_middot[char]
-                    except KeyError:
-                        result += "<?>"
+                    result += "<?>"
             result += " "
         embed = cmn.embed_factory(ctx)
         embed.title = f"ASCII for {msg0}"
