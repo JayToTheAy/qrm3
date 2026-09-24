@@ -20,7 +20,7 @@ import common as cmn
 
 class ContestCalendarView(ui.View):
     def __init__(self, ctx: Union[ApplicationContext, commands.Context], cal: icalendar.Calendar, rundate: datetime.date):
-        super().__init__(timeout=60)
+        super().__init__(timeout=180)
         self.ctx = ctx
         self.cal = cal
         self.rundate = rundate
@@ -77,8 +77,9 @@ class ContestCalendarView(ui.View):
         self.next_day_button_callback.disabled = self.rundate >= self.latest_rundate
         self.children.sort(key=order.index)
 
-        self.timeout = 60  # Reset the timeout each time a button is pressed
-        self._refresh_timeout()
+        self.timeout = 180  # Reset the timeout each time a button is pressed
+  
+
 
     def _events_on_rundate(self) -> list:
         events = []
