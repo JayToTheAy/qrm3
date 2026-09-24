@@ -73,10 +73,12 @@ class ContestCalendarView(ui.View):
         self.next_day_button_callback,
         self.contestCalendarButton,
     ]
-
         self.previous_day_button_callback.disabled = self.rundate <= self.earliest_rundate
         self.next_day_button_callback.disabled = self.rundate >= self.latest_rundate
         self.children.sort(key=order.index)
+
+        self.timeout = 60  # Reset the timeout each time a button is pressed
+        self._refresh_timeout()
 
     def _events_on_rundate(self) -> list:
         events = []
